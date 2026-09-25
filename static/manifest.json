@@ -1,0 +1,16 @@
+{
+  "name": "Iris - Central de Comando",
+  "short_name": "Iris",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#b97af5",
+  "icons": [
+    {
+      "src": "https://i.pinimg.com/1200x/19/55/27/195527c344d4c8775e772c00a32cebaf.jpg",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

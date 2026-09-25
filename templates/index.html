@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iris - Dashboard</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <style>
+        body {
+            color: #c5c6c7; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding: 20px 10px;
+            display: flex; flex-direction: column; align-items: center; background-color: #000000;
+        }
+        body::before {
+            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('https://i.pinimg.com/736x/43/cd/1a/43cd1a9831a734feeeaae5c11e5044d8.jpg');
+            background-size: cover; background-position: center; opacity: 0.15; z-index: -1; pointer-events: none;
+        }
+
+        .header { text-align: center; margin-bottom: 20px; position: relative; width: 100%; max-width: 450px;}
+        .header h1 {
+            color: #b97af5; text-shadow: 0 0 20px rgba(185, 122, 245, 0.7);
+            letter-spacing: 5px; margin: 0; font-weight: 300;
+        }
+        
+        .badge-usuario {
+            position: absolute; top: 0; right: 0; font-size: 10px; background: rgba(185, 122, 245, 0.2);
+            padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(185, 122, 245, 0.4);
+            color: #b97af5; display: flex; align-items: center; gap: 5px; text-transform: uppercase;
+        }
+        .badge-usuario span { cursor: pointer; opacity: 0.7; }
+        .badge-usuario span:hover { opacity: 1; color: #ff4757; }
+
+        .nav-tabs { display: flex; gap: 10px; margin-bottom: 25px; width: 100%; max-width: 450px; }
+        .nav-btn {
+            flex: 1; background: rgba(20, 20, 25, 0.6); border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff; padding: 12px; border-radius: 12px; cursor: pointer;
+            text-transform: uppercase; font-size: 11px; letter-spacing: 2px; transition: 0.3s;
+            backdrop-filter: blur(10px);
+        }
+        .nav-btn.ativa { background: rgba(185, 122, 245, 0.2); border-color: #b97af5; box-shadow: 0 0 15px rgba(185, 122, 245, 0.3); font-weight: bold; }
+
+        .aba-conteudo { display: none; width: 100%; max-width: 450px; flex-direction: column; align-items: center; }
+        .aba-ativa { display: flex; }
+
+        .glass-card {
+            background: rgba(20, 20, 25, 0.45); backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; 
+            padding: 25px; width: 100%; box-sizing: border-box;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); margin-bottom: 25px;
+        }
+
+        .card-title { color: #ffffff; margin-top: 0; font-weight: 500; text-transform: uppercase; font-size: 13px; letter-spacing: 2px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+
+        input, select {
+            width: 100%; box-sizing: border-box; background: rgba(0, 0, 0, 0.4); 
+            border: 1px solid rgba(185, 122, 245, 0.3); color: #fff; padding: 12px; 
+            border-radius: 10px; margin-bottom: 12px; outline: none; font-family: inherit; transition: 0.3s;
+        }
+        input:focus, select:focus { border-color: #b97af5; background: rgba(0, 0, 0, 0.6); }
+        option { background-color: #0b0c10; color: #fff; }
+
+        button.acao-btn {
+            width: 100%; background: linear-gradient(135deg, #7a28cb, #b97af5); border: none; color: white; padding: 12px; border-radius: 10px; 
+            cursor: pointer; font-weight: bold; letter-spacing: 1.5px; box-shadow: 0 4px 15px rgba(185, 122, 245, 0.3); transition: 0.3s; text-transform: uppercase; font-size: 12px;
+        }
+        button.acao-btn:hover { box-shadow: 0 6px 25px rgba(185, 122, 245, 0.6); transform: translateY(-2px); }
+
+        .escondido { display: none !important; }
+
+        .tarefa-item {
+            background: rgba(0, 0, 0, 0.4); padding: 15px; border-radius: 12px; margin-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-left: 4px solid; border-right: 1px solid rgba(255,255,255,0.05);
+            border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .tarefa-info h4 { margin: 0 0 5px 0; color: #fff; font-weight: 500; letter-spacing: 0.5px;}
+        .tarefa-info p { margin: 0; font-size: 12px; opacity: 0.7; color: #b97af5; }
+        .status-concluida { opacity: 0.4; background: rgba(0,0,0,0.2); }
+        .status-concluida h4 { text-decoration: line-through; }
+        .btn-excluir { background: none; border: none; color: rgba(255, 71, 87, 0.5); font-size: 14px; cursor: pointer; transition: 0.2s; padding: 5px; }
+        .btn-excluir:hover { color: #ff4757; text-shadow: 0 0 10px rgba(255, 71, 87, 0.5); transform: scale(1.1); }
+        .cyber-check { appearance: none; width: 24px; height: 24px; border: 2px solid #b97af5; border-radius: 6px; background: rgba(0,0,0,0.5); cursor: pointer; transition: 0.2s; }
+        .cyber-check:checked { background: #b97af5; border-color: #b97af5; box-shadow: 0 0 15px rgba(185, 122, 245, 0.6); }
+        .card-tempo-livre { height: 35px; width: 100%; border: 1px dashed rgba(255, 255, 255, 0.15); border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: center; align-items: center; font-size: 11px; letter-spacing: 1px; color: rgba(255, 255, 255, 0.4); text-transform: uppercase; background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.02) 10px, rgba(255,255,255,0.02) 20px); pointer-events: none; }
+        .card-tempo-livre span { color: #b97af5; font-weight: bold; margin-right: 5px; opacity: 0.8; }
+        .grid-calendario { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; }
+        .dia-semana { font-size: 11px; opacity: 0.5; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;}
+        .dia-celula { background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px 0; cursor: pointer; transition: 0.2s; border: 1px solid transparent; font-size: 14px; }
+        .dia-celula:hover { background: rgba(185, 122, 245, 0.15); }
+        .dia-hoje { border-color: rgba(185, 122, 245, 0.5); font-weight: bold; background: rgba(185, 122, 245, 0.1); }
+        .dia-com-tarefa { color: #b97af5; font-weight: bold; text-shadow: 0 0 8px rgba(185, 122, 245, 0.5); }
+        .nav-calendario { cursor: pointer; padding: 5px 10px; color: #b97af5; font-size: 16px; transition: 0.2s; user-select: none; }
+        .nav-calendario:hover { text-shadow: 0 0 10px rgba(185, 122, 245, 0.8); }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(15px); display: flex; justify-content: center; align-items: center; z-index: 1000; flex-direction: column;}
+        .modal-card { width: 90%; max-width: 400px; position: relative; }
+        .btn-fechar { position: absolute; top: 20px; right: 25px; color: #fff; cursor: pointer; font-size: 18px; opacity: 0.5; transition: 0.2s; }
+        .btn-fechar:hover { opacity: 1; }
+    </style>
+
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#b97af5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js');
+        }
+    </script>
+</head>
+<body>
+
+    <!-- ------------------------------------------------------------- -->
+    <!-- TELA DE LOGIN -->
+    <!-- ------------------------------------------------------------- -->
+    <div id="tela-login" class="modal-overlay">
+        <div class="header">
+            <h1 style="font-size: 40px; margin-bottom: 5px;">IRIS</h1>
+            <p style="font-size: 11px; letter-spacing: 5px; opacity: 0.5; text-transform: uppercase;">Acesso Restrito</p>
+        </div>
+        <div class="glass-card" style="text-align: center; border-color: rgba(185, 122, 245, 0.5);">
+            <h3 class="card-title" style="border: none;">Identificação de Operador</h3>
+            <input type="text" id="input_login_nome" placeholder="Nome (Ex: Vitor)" style="text-align: center; font-size: 16px; letter-spacing: 2px;">
+            <input type="password" id="input_login_senha" placeholder="Senha" style="text-align: center; font-size: 16px; letter-spacing: 2px;">
+            <button class="acao-btn" onclick="fazerLogin()">Autenticar Protocolo</button>
+        </div>
+    </div>
+
+    <!-- ------------------------------------------------------------- -->
+    <!-- APLICATIVO PRINCIPAL (RESTAURADO) -->
+    <!-- ------------------------------------------------------------- -->
+    <div id="app-principal" class="escondido" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+        
+        <div class="header">
+            <h1>IRIS</h1>
+            <p style="font-size: 11px; letter-spacing: 3px; opacity: 0.5; text-transform: uppercase;">Central de Comando</p>
+            <div class="badge-usuario" id="badge-nome-usuario">
+                Op: <strong id="texto-nome-operador"></strong>
+                <span onclick="fazerLogout()" title="Desconectar">⏻</span>
+            </div>
+        </div>
+
+        <div class="nav-tabs">
+            <div class="nav-btn ativa" onclick="mudarAba('aba-dashboard', this)">Dashboard</div>
+            <div class="nav-btn" onclick="mudarAba('aba-operacoes', this)">Operações</div>
+        </div>
+
+        <div id="aba-dashboard" class="aba-conteudo aba-ativa">
+            <div class="glass-card">
+                <h3 class="card-title">Progresso da Semana (%)</h3>
+                <canvas id="graficoSemana" height="150"></canvas>
+            </div>
+            <div class="glass-card">
+                <h3 class="card-title">Missões de Hoje</h3>
+                <div id="lista-hoje"></div>
+            </div>
+        </div>
+
+        <div id="aba-operacoes" class="aba-conteudo">
+            <div class="glass-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+                    <span class="nav-calendario" onclick="mudarMes(-1)">❮</span>
+                    <h3 class="card-title" id="mes-ano-calendario" style="margin: 0; border: none; padding: 0;">Calendário</h3>
+                    <span class="nav-calendario" onclick="mudarMes(1)">❯</span>
+                </div>
+                <div id="calendario-mestre" class="grid-calendario"></div>
+            </div>
+
+            <div class="glass-card">
+                <h3 class="card-title">Inicializar Nova Missão</h3>
+                <input type="text" id="nome_tarefa" placeholder="Título (Ex: Ir ao mercado)">
+                <select id="tipo_tarefa" onchange="verificarTipo()">
+                    <option value="diario">Tarefa Única (Não se repete)</option>
+                    <option value="recorrente">Tarefa Recorrente (Ciclo)</option>
+                </select>
+                <input type="text" id="data_tarefa" placeholder="Selecione a Data e Hora">
+
+                <div id="bloco_recorrencia" class="escondido">
+                    <select id="regra_recorrencia" onchange="verificarRecorrencia()">
+                        <option value="diaria">Todo dia</option>
+                        <option value="semanal">Semanal</option>
+                        <option value="mensal">Mensal</option>
+                        <option value="customizada">Personalizado...</option>
+                    </select>
+                </div>
+                <div id="bloco_customizado" class="escondido" style="gap: 10px;">
+                    <input type="number" id="custom_valor" placeholder="Ex: 2" style="width: 30%;">
+                    <select id="custom_unidade" style="width: 70%;">
+                        <option value="horas">Horas</option>
+                        <option value="dias">Dias</option>
+                    </select>
+                </div>
+                <button class="acao-btn" onclick="enviarTarefa()">Gravar no Sistema</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modais -->
+    <div id="modal-dia" class="modal-overlay escondido" style="z-index: 2000;">
+        <div class="glass-card modal-card">
+            <span class="btn-fechar" onclick="fecharModalDia()">✖</span>
+            <h3 class="card-title" id="modal-titulo-data">Missões do Dia</h3>
+            <div id="lista-modal"></div>
+        </div>
+    </div>
+
+    <div id="modal-atraso" class="modal-overlay escondido" style="z-index: 2000;">
+        <div class="glass-card modal-card" style="text-align: center; border-color: rgba(255, 71, 87, 0.4);">
+            <h3 class="card-title" style="color: #ff4757; border: none; margin-bottom: 5px;">Aviso de Atraso</h3>
+            <p style="font-size: 14px; opacity: 0.8; margin-bottom: 25px;">Esta missão já passou da data limite. Concluir agora?</p>
+            <div style="display: flex; gap: 15px;">
+                <button class="acao-btn" style="background: rgba(255, 71, 87, 0.2); border: 1px solid #ff4757; color: #ff4757; box-shadow: none;" onclick="fecharModalAtraso()">Cancelar</button>
+                <button class="acao-btn" style="background: linear-gradient(135deg, #ff4757, #ff6b81);" onclick="confirmarAtraso()">Sim, Concluir</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let graficoIris = null; 
+        let todasAsTarefas = []; 
+        let idTarefaPendente = null; 
+        let mesVisor = new Date().getMonth();
+        let anoVisor = new Date().getFullYear();
+        let tarefasNotificadas = new Set(); 
+
+        if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+            Notification.requestPermission();
+        }
+
+        flatpickr("#data_tarefa", { enableTime: true, dateFormat: "d/m/Y H:i", time_24hr: true, defaultDate: new Date() });
+        
+        window.onload = function() { 
+            verificarSessao();
+            setInterval(checarNotificacoes, 60000);
+        };
+
+        function verificarSessao() {
+            fetch('/api/sessao?t=' + new Date().getTime(), { cache: 'no-store' })
+                .then(res => res.json())
+                .then(dados => {
+                    if (dados.usuario) {
+                        document.getElementById('texto-nome-operador').innerText = dados.usuario;
+                        document.getElementById('tela-login').style.display = 'none';
+                        document.getElementById('app-principal').classList.remove('escondido');
+                        carregarDashboard();
+                    } else {
+                        document.getElementById('tela-login').style.display = 'flex';
+                        document.getElementById('app-principal').classList.add('escondido');
+                    }
+                });
+        }
+
+        function fazerLogin() {
+            let nome = document.getElementById("input_login_nome").value;
+            let senha = document.getElementById("input_login_senha").value;
+
+            if (!nome || !senha) { alert("Informe seu nome e senha para acessar."); return; }
+            
+            fetch('/api/sessao', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ usuario: nome, senha: senha })
+            })
+            .then(res => res.json())
+            .then(dados => {
+                if (dados.erro) {
+                    alert(dados.erro); 
+                } else {
+                    document.getElementById("input_login_senha").value = ""; 
+                    document.getElementById('texto-nome-operador').innerText = nome;
+                    document.getElementById('tela-login').style.display = 'none';
+                    document.getElementById('app-principal').classList.remove('escondido');
+                    carregarDashboard(); 
+                }
+            });
+        }
+
+        function fazerLogout() {
+            if(confirm("Deseja desconectar e bloquear a interface?")) {
+                fetch('/api/sessao', { method: 'DELETE' }).then(() => {
+                    todasAsTarefas = []; 
+                    verificarSessao();
+                });
+            }
+        }
+
+        function tocarSomConclusao() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                const ctx = new AudioContext();
+                const osc = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+                osc.type = 'sine'; osc.frequency.setValueAtTime(800, ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(1500, ctx.currentTime + 0.1); 
+                gainNode.gain.setValueAtTime(0.5, ctx.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+                osc.connect(gainNode); gainNode.connect(ctx.destination);
+                osc.start(); osc.stop(ctx.currentTime + 0.15);
+            } catch (e) {}
+        }
+
+        function mudarAba(idAba, botaoClicado) {
+            document.querySelectorAll('.aba-conteudo').forEach(aba => aba.classList.remove('aba-ativa'));
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('ativa'));
+            document.getElementById(idAba).classList.add('aba-ativa');
+            botaoClicado.classList.add('ativa');
+        }
+
+        function carregarDashboard() {
+            fetch('/api/tarefas')
+                .then(resposta => {
+                    if (resposta.status === 401) return []; 
+                    return resposta.json();
+                })
+                .then(tarefas => {
+                    todasAsTarefas = tarefas; 
+                    renderizarTarefasHoje(tarefas);
+                    renderizarGrafico(tarefas);
+                    renderizarCalendarioMestre(tarefas);
+                });
+        }
+
+        function converterDataBR(dataString) {
+            if (!dataString) return null;
+            let partes = dataString.split(/[\s/:]+/);
+            return new Date(partes[2], partes[1] - 1, partes[0], partes[3], partes[4]);
+        }
+
+        function checarNotificacoes() {
+            if (Notification.permission !== "granted") return;
+            let agora = new Date();
+            todasAsTarefas.forEach(t => {
+                if (t.concluida) return;
+                let dataAlvo = converterDataBR(t.data_alvo);
+                let diferencaMinutos = Math.round((dataAlvo - agora) / 60000);
+                if (diferencaMinutos === 30 && !tarefasNotificadas.has(t.id)) {
+                    let horaTexto = `${dataAlvo.getHours().toString().padStart(2, '0')}:${dataAlvo.getMinutes().toString().padStart(2, '0')}`;
+                    new Notification("IRIS: Missão Iminente", { body: `"${t.titulo}" começa em 30 minutos (${horaTexto}).`, icon: "https://cdn-icons-png.flaticon.com/512/825/825590.png" });
+                    tarefasNotificadas.add(t.id);
+                }
+            });
+        }
+
+        function apagarTarefa(id) {
+            if (confirm("Deseja expurgar esta missão do sistema?")) {
+                fetch('/api/tarefas/' + id, { method: 'DELETE' }).then(() => {
+                    carregarDashboard();
+                    if (!document.getElementById("modal-dia").classList.contains("escondido")) {
+                        let titulo = document.getElementById("modal-titulo-data").innerText;
+                        let partes = titulo.split(" ")[1].split("/");
+                        abrirModalDia(parseInt(partes[2]), parseInt(partes[1])-1, parseInt(partes[0]));
+                    }
+                });
+            }
+        }
+
+        function gerarHTMLTarefa(t) {
+            let dataTarefa = converterDataBR(t.data_alvo);
+            let corBorda = t.tipo === "recorrente" ? "#1e90ff" : "#ff4757";
+            let concluidaAttr = t.concluida ? "checked" : "";
+            let classeConcluida = t.concluida ? "status-concluida" : "";
+            let horaTexto = formatarHora(dataTarefa);
+            return `
+                <div class="tarefa-item ${classeConcluida}" style="border-left-color: ${corBorda};">
+                    <div class="tarefa-info">
+                        <h4>${t.titulo}</h4>
+                        <p>⏱ ${horaTexto}</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <button class="btn-excluir" onclick="apagarTarefa(${t.id})" title="Expurgar Missão">✖</button>
+                        <input type="checkbox" class="cyber-check" onclick="clicarCheck(${t.id}, '${t.data_alvo}', ${t.concluida})" ${concluidaAttr}>
+                    </div>
+                </div>
+            `;
+        }
+
+        function formatarHora(dataObjeto) {
+            return `${dataObjeto.getHours().toString().padStart(2, '0')}:${dataObjeto.getMinutes().toString().padStart(2, '0')}`;
+        }
+
+        function renderizarTarefasHoje(tarefas) {
+            let container = document.getElementById("lista-hoje");
+            let hojeStr = new Date().toDateString();
+            let tarefasHoje = tarefas.filter(t => { let d = converterDataBR(t.data_alvo); return d && d.toDateString() === hojeStr; });
+            tarefasHoje.sort((a, b) => converterDataBR(a.data_alvo) - converterDataBR(b.data_alvo));
+            let htmlFinal = "";
+            for (let i = 0; i < tarefasHoje.length; i++) {
+                htmlFinal += gerarHTMLTarefa(tarefasHoje[i]);
+                if (i < tarefasHoje.length - 1) {
+                    let dataAtual = converterDataBR(tarefasHoje[i].data_alvo);
+                    let dataProxima = converterDataBR(tarefasHoje[i+1].data_alvo);
+                    let difMinutos = Math.round((dataProxima - dataAtual) / 60000);
+                    if (difMinutos > 0) {
+                        let horasLivre = Math.floor(difMinutos / 60);
+                        let minLivre = difMinutos % 60;
+                        let textoTempo = "";
+                        if (horasLivre > 0) textoTempo += `${horasLivre}h `;
+                        if (minLivre > 0 || horasLivre === 0) textoTempo += `${minLivre}m `;
+                        htmlFinal += `<div class="card-tempo-livre"><span>${textoTempo.trim()} livre</span> &nbsp; ${formatarHora(dataAtual)} - ${formatarHora(dataProxima)}</div>`;
+                    }
+                }
+            }
+            container.innerHTML = htmlFinal || '<p style="font-size: 13px; opacity: 0.4; text-align: center;">Nenhuma missão mapeada para hoje.</p>';
+        }
+
+        function clicarCheck(id, dataAlvoStr, isConcluida) {
+            if (!isConcluida) tocarSomConclusao();
+            if (isConcluida === true) { dispararToggle(id); } else {
+                let dataAlvo = converterDataBR(dataAlvoStr);
+                if (dataAlvo < new Date()) { idTarefaPendente = id; document.getElementById("modal-atraso").classList.remove("escondido"); } else { dispararToggle(id); }
+            }
+        }
+        function confirmarAtraso() { dispararToggle(idTarefaPendente); document.getElementById("modal-atraso").classList.add("escondido"); }
+        function fecharModalAtraso() { document.getElementById("modal-atraso").classList.add("escondido"); carregarDashboard(); }
+        
+        function dispararToggle(id) {
+            fetch('/api/tarefas/' + id + '/toggle', { method: 'POST' }).then(() => {
+                carregarDashboard(); 
+                if (!document.getElementById("modal-dia").classList.contains("escondido")) {
+                    let titulo = document.getElementById("modal-titulo-data").innerText;
+                    let partes = titulo.split(" ")[1].split("/");
+                    abrirModalDia(parseInt(partes[2]), parseInt(partes[1])-1, parseInt(partes[0]));
+                }
+            });
+        }
+
+        function mudarMes(direcao) {
+            mesVisor += direcao;
+            if (mesVisor < 0) { mesVisor = 11; anoVisor--; } else if (mesVisor > 11) { mesVisor = 0; anoVisor++; }
+            renderizarCalendarioMestre(todasAsTarefas);
+        }
+
+        function renderizarCalendarioMestre(tarefas) {
+            let container = document.getElementById("calendario-mestre"); let hoje = new Date();
+            const nomesMeses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+            document.getElementById("mes-ano-calendario").innerText = `${nomesMeses[mesVisor]} ${anoVisor}`;
+            let primeiroDia = new Date(anoVisor, mesVisor, 1); let ultimoDia = new Date(anoVisor, mesVisor + 1, 0);
+            let html = '<div class="dia-semana">Dom</div><div class="dia-semana">Seg</div><div class="dia-semana">Ter</div><div class="dia-semana">Qua</div><div class="dia-semana">Qui</div><div class="dia-semana">Sex</div><div class="dia-semana">Sáb</div>';
+            for (let i = 0; i < primeiroDia.getDay(); i++) { html += '<div></div>'; }
+            for (let dia = 1; dia <= ultimoDia.getDate(); dia++) {
+                let dataLaco = new Date(anoVisor, mesVisor, dia);
+                let ehHoje = dataLaco.toDateString() === hoje.toDateString() ? "dia-hoje" : "";
+                let temTarefaAqui = tarefas.some(t => { let d = converterDataBR(t.data_alvo); return d && d.toDateString() === dataLaco.toDateString(); });
+                html += `<div class="dia-celula ${ehHoje} ${temTarefaAqui ? "dia-com-tarefa" : ""}" onclick="abrirModalDia(${anoVisor}, ${mesVisor}, ${dia})">${dia}</div>`;
+            }
+            container.innerHTML = html;
+        }
+
+        function abrirModalDia(ano, mes, dia) {
+            let dataAlvo = new Date(ano, mes, dia);
+            document.getElementById("modal-titulo-data").innerText = `Missões: ${dia.toString().padStart(2, '0')}/${(mes+1).toString().padStart(2, '0')}/${ano}`;
+            let htmlModal = "";
+            todasAsTarefas.forEach(t => { let d = converterDataBR(t.data_alvo); if (d && d.toDateString() === dataAlvo.toDateString()) { htmlModal += gerarHTMLTarefa(t); } });
+            document.getElementById("lista-modal").innerHTML = htmlModal || '<p style="font-size: 13px; opacity: 0.4; text-align: center; margin-top: 20px;">Área livre.</p>';
+            document.getElementById("modal-dia").classList.remove("escondido");
+        }
+        function fecharModalDia() { document.getElementById("modal-dia").classList.add("escondido"); }
+
+        function verificarTipo() {
+            let tipo = document.getElementById("tipo_tarefa").value;
+            if (tipo === "recorrente") { document.getElementById("bloco_recorrencia").classList.remove("escondido"); } 
+            else { document.getElementById("bloco_recorrencia").classList.add("escondido"); document.getElementById("bloco_customizado").classList.add("escondido"); }
+        }
+        function verificarRecorrencia() {
+            let regra = document.getElementById("regra_recorrencia").value;
+            if (regra === "customizada") { document.getElementById("bloco_customizado").style.display = "flex"; document.getElementById("bloco_customizado").classList.remove("escondido"); } 
+            else { document.getElementById("bloco_customizado").classList.add("escondido"); document.getElementById("bloco_customizado").style.display = "none"; }
+        }
+
+        function enviarTarefa() {
+            let pacote = { "titulo": document.getElementById("nome_tarefa").value, "tipo": document.getElementById("tipo_tarefa").value, "data_alvo": document.getElementById("data_tarefa").value };
+            if (!pacote.titulo || !pacote.data_alvo) { alert("Preencha o nome e a data!"); return; }
+            if (pacote.tipo === "recorrente") {
+                pacote.recorrencia = document.getElementById("regra_recorrencia").value;
+                if (pacote.recorrencia === "customizada") { pacote.custom_valor = parseInt(document.getElementById("custom_valor").value); pacote.custom_unidade = document.getElementById("custom_unidade").value; }
+            }
+            fetch('/api/tarefas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pacote) }).then(() => {
+                document.getElementById("nome_tarefa").value = ""; carregarDashboard(); 
+                mudarAba('aba-dashboard', document.querySelectorAll('.nav-btn')[0]); 
+            });
+        }
+
+        const pluginPorcentagem = {
+            id: 'pluginPorcentagem',
+            afterDatasetsDraw(chart) {
+                const { ctx, data } = chart; ctx.save(); ctx.font = '11px "Segoe UI"'; ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'; ctx.textAlign = 'center';
+                chart.getDatasetMeta(0).data.forEach((bar, index) => { const valor = data.datasets[0].data[index]; if (valor > 0) ctx.fillText(valor + '%', bar.x, bar.y - 6); });
+            }
+        };
+
+        function renderizarGrafico(tarefas) {
+            let hoje = new Date(); let domingo = new Date(hoje); domingo.setDate(hoje.getDate() - hoje.getDay());
+            let porcentagens = [0, 0, 0, 0, 0, 0, 0];
+            for (let i = 0; i < 7; i++) {
+                let diaSemana = new Date(domingo); diaSemana.setDate(domingo.getDate() + i); let total = 0; let conc = 0;
+                tarefas.forEach(t => { let d = converterDataBR(t.data_alvo); if (d && d.toDateString() === diaSemana.toDateString()) { total++; if (t.concluida) conc++; } });
+                if (total > 0) porcentagens[i] = Math.round((conc / total) * 100);
+            }
+            if (graficoIris !== null) graficoIris.destroy();
+            graficoIris = new Chart(document.getElementById('graficoSemana').getContext('2d'), {
+                type: 'bar', data: { labels: ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"], datasets: [{ data: porcentagens, backgroundColor: 'rgba(185, 122, 245, 0.7)', borderColor: '#b97af5', borderWidth: 1, borderRadius: 4 }] },
+                options: { responsive: true, scales: { y: { beginAtZero: true, max: 100, ticks: { display: false }, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { ticks: { color: 'rgba(255,255,255,0.5)' }, grid: { display: false } } }, plugins: { legend: { display: false } } }, plugins: [pluginPorcentagem]
+            });
+        }
+    </script>
+</body>
+</html>
