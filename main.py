@@ -11,7 +11,7 @@ app.secret_key = "iris_cyberpunk_secret_2026"
 
 # ----------------- COLOQUE SUAS CHAVES AQUI -----------------
 SUPABASE_URL = "https://dbtbwqgxirlegjwtpdoa.supabase.co"
-SUPABASE_KEY = "sb_publishable_M6VJrqlxWtEil1sqo6ZfXQ_wfa0GewU"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRidGJ3cWd4aXJsZWdqd3RwZG9hIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MDIyNzg4NiwiZXhwIjoyMTA1ODAzODg2fQ.rkJ9cxiruOxyBGbWsjAjncdfs6GuDbzhpcdKLlkKsa4"
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # ----------------- SISTEMA DE LOGIN NA NUVEM -----------------
